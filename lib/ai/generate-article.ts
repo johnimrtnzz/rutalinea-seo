@@ -32,7 +32,7 @@ Reglas estrictas:
   }.
 - NUNCA inventes cifras, estudios o estadísticas falsas. Si mencionas un dato numérico, indica que es orientativo.
 - No uses relleno ni frases vacías tipo "en la era digital actual".
-- Longitud objetivo: ${input.targetWordCount ?? 1200} palabras.
+- Longitud objetivo: ${input.targetWordCount ?? 2000} palabras. Desarrolla cada sección H2 en profundidad (varios párrafos, no uno solo), añade ejemplos concretos y cubre subtemas relacionados en vez de quedarte en lo superficial.
 - Devuelve el resultado ÚNICAMENTE como un objeto JSON válido, sin texto adicional, sin backticks, con esta forma exacta:
 {
   "title": "string",
@@ -49,7 +49,7 @@ export async function generateArticle(
 
   const message = await anthropic.messages.create({
     model: ARTICLE_MODEL,
-    max_tokens: 8000,
+    max_tokens: 12000,
     system,
     messages: [
       {
