@@ -81,9 +81,9 @@ export function analyzeContent(params: {
     },
     {
       label: "Longitud mínima competitiva",
-      passed: wordCount >= 900,
+      passed: wordCount >= 1600,
       weight: 15,
-      hint: `El artículo tiene ${wordCount} palabras. Para competir, apunta a 1000+.`,
+      hint: `El artículo tiene ${wordCount} palabras. Para competir, apunta a 2000+.`,
     },
   ];
 
