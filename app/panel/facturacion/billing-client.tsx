@@ -1,34 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PLAN_LIMITS, type Profile } from "@/lib/types";
 
-export function BillingClient({ profile }: { profile: Profile }) {
+declare global {
+  interface Window {
+    Paddle?: any;
+  }
+}
+
+const PADDLE_PRICE_IDS: Record<"starter" | "pro" | "agency", string | undefined> = {
+  starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER,
+  pro: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO,
+  agency: process.env.NEXT_PUBLIC_PADDLE_PRICE_AGENCY,
+};
+
+export function BillingClient({ profile, userEmail }: { profile: Profile; userEmail: string }) {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [paddleReady, setPaddleReady] = useState(false);
 
-  async function handleUpgrade(plan: "starter" | "pro" | "agency") {
+  useEffect(() => {
+    if (window.Paddle) {
+      setPaddleReady(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
+    script.onload = () => {
+      window.Paddle?.Environment.set(
+        process.env.NEXT_PUBLIC_PADDLE_ENV === "production" ? "production" : "sandbox"
+      );
+      window.Paddle?.Initialize({
+        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ?? "",
+      });
+      setPaddleReady(true);
+    };
+    document.body.appendChild(script);
+  }, []);
+
+  function handleUpgrade(plan: "starter" | "pro" | "agency") {
+    const priceId = PADDLE_PRICE_IDS[plan];
+    if (!paddleReady || !priceId) {
+      alert("Paddle todavía no está configurado. Revisa que las variables de entorno estén puestas.");
+      return;
+    }
     setLoadingPlan(plan);
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan }),
+    window.Paddle.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customer: { email: userEmail },
+      customData: { supabase_user_id: profile.id, plan },
+      settings: {
+        successUrl: `${window.location.origin}/panel/facturacion?success=1`,
+      },
     });
-    const data = await res.json();
     setLoadingPlan(null);
-    if (data.url) window.location.href = data.url;
-    else alert(data.error ?? "No se pudo iniciar el pago. Revisa que Stripe esté configurado.");
   }
 
   async function handlePortal() {
     setLoadingPortal(true);
-    const res = await fetch("/api/stripe/portal", { method: "POST" });
+    const res = await fetch("/api/paddle/portal", { method: "POST" });
     const data = await res.json();
     setLoadingPortal(false);
-    if (data.url) window.location.href = data.url;
-    else alert(data.error ?? "No se pudo abrir el portal de facturación.");
+    if (data.updateUrl) window.location.href = data.updateUrl;
+    else alert(data.error ?? "No se pudo abrir la gestión de la suscripción.");
   }
 
   return (
@@ -46,7 +83,7 @@ export function BillingClient({ profile }: { profile: Profile }) {
             periodo · estado: {profile.plan_status}
           </p>
         </div>
-        {profile.stripe_customer_id && (
+        {profile.paddle_subscription_id && (
           <Button variant="secondary" onClick={handlePortal} disabled={loadingPortal}>
             {loadingPortal ? "Abriendo…" : "Gestionar suscripción"}
           </Button>
@@ -67,7 +104,7 @@ export function BillingClient({ profile }: { profile: Profile }) {
               </div>
               <ul className="text-sm text-[var(--color-slate)] space-y-1 mb-6 flex-1">
                 <li>{p.articles} artículos/mes</li>
-                <li>{p.sites} sitios WordPress</li>
+                <li>{p.sites} sitio{p.sites > 1 ? "s" : ""} WordPress</li>
               </ul>
               <Button
                 variant={isCurrent ? "secondary" : "primary"}

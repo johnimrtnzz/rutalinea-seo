@@ -14,5 +14,5 @@ export default async function FacturacionPage() {
     .eq("id", user!.id)
     .single();
 
-  return <BillingClient profile={profile as Profile} />;
+  return <BillingClient profile={profile as Profile} userEmail={user!.email ?? ""} />;
 }

@@ -14,6 +14,8 @@ export interface Profile {
   plan: Plan;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  paddle_customer_id: string | null;
+  paddle_subscription_id: string | null;
   plan_status: "inactive" | "active" | "past_due" | "canceled";
   articles_used_this_period: number;
   articles_limit: number;
