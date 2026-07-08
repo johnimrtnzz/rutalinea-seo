@@ -119,13 +119,8 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-[var(--color-line)] py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-[var(--color-slate-soft)]">
-          <span>Rutalinea SEO — hecho para publicar en español.</span>
-          <div className="flex gap-4 text-xs">
-            <Link href="/terminos" className="hover:underline">Términos de servicio</Link>
-            <Link href="/privacidad" className="hover:underline">Privacidad</Link>
-            <Link href="/reembolsos" className="hover:underline">Reembolsos</Link>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 text-sm text-[var(--color-slate-soft)]">
+          Rutalinea SEO — hecho para publicar en español.
         </div>
       </footer>
     </div>
